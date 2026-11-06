@@ -1,0 +1,113 @@
+
+const destinations = [
+  {
+    id: 1,
+    name: "Swiss Alps",
+    country: "Switzerland",
+    category: "Mountains",
+    image:
+      "https://images.unsplash.com/photo-1531366936337-7c912a4589a7?w=1200",
+    rating: "4.9",
+    duration: "7 Days / 6 Nights",
+    description:
+      "Experience the breathtaking beauty of the Swiss Alps, surrounded by majestic mountains, peaceful lakes and charming villages.",
+    highlights: [
+      "Snow-covered mountain peaks",
+      "Scenic train journeys",
+      "Beautiful alpine villages",
+      "Mountain hiking experiences",
+    ],
+  },
+  {
+    id: 2,
+    name: "Bali",
+    country: "Indonesia",
+    category: "Beaches",
+    image:
+      "https://images.unsplash.com/photo-1537996194471-e657df975ab4?w=1200",
+    rating: "4.8",
+    duration: "5 Days / 4 Nights",
+    description:
+      "Discover Bali's tropical beaches, beautiful temples, lush green rice terraces and unforgettable sunsets.",
+    highlights: [
+      "Beautiful tropical beaches",
+      "Traditional Balinese temples",
+      "Rice terrace landscapes",
+      "Amazing sunset views",
+    ],
+  },
+  {
+    id: 3,
+    name: "Santorini",
+    country: "Greece",
+    category: "Beaches",
+    image:
+      "https://images.unsplash.com/photo-1533105079780-92b9be482077?w=1200",
+    rating: "4.9",
+    duration: "6 Days / 5 Nights",
+    description:
+      "Explore the iconic white buildings, blue domes and stunning coastal views of Santorini.",
+    highlights: [
+      "Iconic blue dome churches",
+      "Beautiful Mediterranean views",
+      "Romantic sunset locations",
+      "Traditional Greek streets",
+    ],
+  },
+  {
+    id: 4,
+    name: "Kyoto",
+    country: "Japan",
+    category: "Culture",
+    image:
+      "https://images.unsplash.com/photo-1493976040374-85c8e12f0c0e?w=1200",
+    rating: "4.8",
+    duration: "4 Days / 3 Nights",
+    description:
+      "Experience Japan's cultural heritage through ancient temples, traditional streets and beautiful gardens.",
+    highlights: [
+      "Traditional Japanese temples",
+      "Bamboo forests",
+      "Historic streets",
+      "Japanese gardens",
+    ],
+  },
+  {
+    id: 5,
+    name: "Dubai",
+    country: "UAE",
+    category: "Adventure",
+    image:
+      "https://images.unsplash.com/photo-1512453979798-5ea266f8880c?w=1200",
+    rating: "4.7",
+    duration: "5 Days / 4 Nights",
+    description:
+      "Explore Dubai's impressive skyline, luxury attractions and exciting desert adventures.",
+    highlights: [
+      "Burj Khalifa",
+      "Desert safari",
+      "Luxury shopping",
+      "Modern architecture",
+    ],
+  },
+  {
+    id: 6,
+    name: "Bora Bora",
+    country: "French Polynesia",
+    category: "Nature",
+    image:
+      "https://images.unsplash.com/photo-1501785888041-af3ef285b470?w=1200",
+    rating: "4.9",
+    duration: "6 Days / 5 Nights",
+    description:
+      "Escape to a tropical paradise featuring crystal-clear waters, green landscapes and peaceful surroundings.",
+    highlights: [
+      "Crystal-clear lagoons",
+      "Tropical landscapes",
+      "Snorkeling experiences",
+      "Beautiful island views",
+    ],
+  },
+];
+
+export default destinations;
