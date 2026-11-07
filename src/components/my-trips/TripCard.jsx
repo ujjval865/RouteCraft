@@ -1,8 +1,14 @@
 import { motion } from "motion/react";
 import { Link } from "react-router-dom";
-import { ArrowUpRight, CalendarDays, MapPin, Users } from "lucide-react";
+import {
+  ArrowUpRight,
+  CalendarDays,
+  MapPin,
+  Users,
+  Trash2,
+} from "lucide-react";
 
-function TripCard({ trip, index }) {
+function TripCard({ trip, index, onDelete }) {
   return (
     <motion.article
       initial={{ opacity: 0, y: 35 }}
@@ -72,6 +78,17 @@ function TripCard({ trip, index }) {
             <p className="text-sm text-[#172B3A]/55">Travel Style</p>
             <p className="font-semibold text-[#172B3A]">{trip.travelStyle}</p>
           </div>
+          <button
+            onClick={() => {
+              if (window.confirm(`Delete trip to ${trip.destination}?`)) {
+                onDelete(trip.id);
+              }
+            }}
+            className="flex h-12 w-12 items-center justify-center rounded-full border border-red-200 text-red-500 transition hover:bg-red-500 hover:text-white"
+            aria-label="Delete trip"
+          >
+            <Trash2 size={20} />
+          </button>
 
           <Link
             to={`/my-trips/${trip.id}`}

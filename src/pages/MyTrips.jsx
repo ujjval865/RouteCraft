@@ -1,7 +1,8 @@
 import { useMemo, useState } from "react";
 import { motion } from "motion/react";
 import { Link } from "react-router-dom";
-import trips from "../data/trips";
+import destinations from "../data/destinations";
+import { getTrips, deleteTrip } from "../services/tripStorage";
 
 import {
   ArrowRight,
@@ -15,40 +16,111 @@ import {
 
 import TripCard from "../components/my-trips/TripCard";
 
-// Temporary sample data.
-// Later, this data will come from Supabase.
+// Convert date into readable format
+const formatDate = (date) => {
+  return new Date(`${date}T00:00:00`).toLocaleDateString("en-US", {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+  });
+};
 
+// Get trip status based on travel dates
+const getTripStatus = (startDate, endDate) => {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
 
+  const start = new Date(`${startDate}T00:00:00`);
+  const end = new Date(`${endDate}T00:00:00`);
+
+  if (end < today) return "Completed";
+
+  return "Upcoming";
+};
 
 function MyTrips() {
   const [activeFilter, setActiveFilter] = useState("All Trips");
   const [searchQuery, setSearchQuery] = useState("");
 
+  // Get saved trips and add destination details
+  const [trips, setTrips] = useState(() => {
+    return getTrips().map((trip) => {
+      const destinationData = destinations.find(
+        (item) => item.id === Number(trip.destination),
+      );
+
+      return {
+        ...trip,
+        destination: destinationData?.name || "Unknown Destination",
+        country: destinationData?.country || "Unknown Country",
+        image: destinationData?.image || "",
+        dates: `${formatDate(trip.startDate)} - ${formatDate(trip.endDate)}`,
+        travelers: `${trip.travelers} People`,
+        status: getTripStatus(trip.startDate, trip.endDate),
+      };
+    });
+  });
+
+  const handleDeleteTrip = (tripId) => {
+    const updatedTrips = deleteTrip(tripId);
+
+    const updatedTripsWithDetails = updatedTrips.map((trip) => {
+      const destinationData = destinations.find(
+        (item) => item.id === Number(trip.destination),
+      );
+
+      return {
+        ...trip,
+        destination: destinationData?.name || "Unknown Destination",
+        country: destinationData?.country || "Unknown Country",
+        image: destinationData?.image || "",
+        dates: `${formatDate(trip.startDate)} - ${formatDate(trip.endDate)}`,
+        travelers: `${trip.travelers} People`,
+        status: getTripStatus(trip.startDate, trip.endDate),
+      };
+    });
+
+    setTrips(updatedTripsWithDetails);
+  };
+
   const filters = ["All Trips", "Upcoming", "Completed"];
 
-  // Filter trips according to selected category and search.
+  // Filter trips according to category and search
   const filteredTrips = useMemo(() => {
     return trips.filter((trip) => {
       const matchesFilter =
-        activeFilter === "All Trips" ||
-        trip.status === activeFilter;
+        activeFilter === "All Trips" || trip.status === activeFilter;
 
       const matchesSearch =
-        trip.destination
-          .toLowerCase()
-          .includes(searchQuery.toLowerCase()) ||
-        trip.country
-          .toLowerCase()
-          .includes(searchQuery.toLowerCase());
+        trip.destination.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        trip.country.toLowerCase().includes(searchQuery.toLowerCase());
 
       return matchesFilter && matchesSearch;
     });
-  }, [activeFilter, searchQuery]);
+  }, [trips, activeFilter, searchQuery]);
+
+  // Dashboard statistics
+  const stats = [
+    {
+      label: "Total Trips",
+      value: trips.length,
+      icon: MapPin,
+    },
+    {
+      label: "Upcoming Trips",
+      value: trips.filter((trip) => trip.status === "Upcoming").length,
+      icon: Plane,
+    },
+    {
+      label: "Completed Trips",
+      value: trips.filter((trip) => trip.status === "Completed").length,
+      icon: Sparkles,
+    },
+  ];
 
   return (
     <main className="min-h-screen overflow-hidden bg-[#F7F5EF] px-5 pb-24 pt-32 text-[#172B3A] sm:px-8">
       <div className="mx-auto max-w-7xl">
-
         {/* Page Header */}
         <motion.section
           initial={{ opacity: 0, y: 30 }}
@@ -63,13 +135,12 @@ function MyTrips() {
             </div>
 
             <h1 className="max-w-3xl text-5xl font-bold leading-tight tracking-tight sm:text-6xl lg:text-7xl">
-              Every journey has a
-              <span className="text-[#238A83]"> story.</span>
+              Every journey has a<span className="text-[#238A83]"> story.</span>
             </h1>
 
             <p className="mt-5 max-w-xl text-lg leading-relaxed text-[#172B3A]/65">
-              Keep all your travel plans together and get ready
-              for the adventures waiting ahead.
+              Keep all your travel plans together and get ready for the
+              adventures waiting ahead.
             </p>
           </div>
 
@@ -90,27 +161,7 @@ function MyTrips() {
           transition={{ duration: 0.7, delay: 0.15 }}
           className="mb-12 grid grid-cols-1 gap-5 sm:grid-cols-3"
         >
-          {[
-            {
-              label: "Total Trips",
-              value: trips.length,
-              icon: MapPin,
-            },
-            {
-              label: "Upcoming Trips",
-              value: trips.filter(
-                (trip) => trip.status === "Upcoming"
-              ).length,
-              icon: Plane,
-            },
-            {
-              label: "Completed Trips",
-              value: trips.filter(
-                (trip) => trip.status === "Completed"
-              ).length,
-              icon: Sparkles,
-            },
-          ].map((stat, index) => {
+          {stats.map((stat) => {
             const Icon = stat.icon;
 
             return (
@@ -121,18 +172,14 @@ function MyTrips() {
                 className="rounded-3xl border border-white/80 bg-white/55 p-6 shadow-[0_12px_40px_rgba(23,43,58,0.05)] backdrop-blur-xl"
               >
                 <div className="mb-5 flex items-center justify-between">
-                  <p className="text-lg text-[#172B3A]/65">
-                    {stat.label}
-                  </p>
+                  <p className="text-lg text-[#172B3A]/65">{stat.label}</p>
 
                   <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[#A8E3D9]/35 text-[#238A83]">
                     <Icon size={23} />
                   </div>
                 </div>
 
-                <h2 className="text-4xl font-bold">
-                  {stat.value}
-                </h2>
+                <h2 className="text-4xl font-bold">{stat.value}</h2>
               </motion.div>
             );
           })}
@@ -180,6 +227,7 @@ function MyTrips() {
                 key={trip.id}
                 trip={trip}
                 index={index}
+                onDelete={handleDeleteTrip}
               />
             ))}
           </motion.section>
@@ -193,13 +241,11 @@ function MyTrips() {
               <Compass size={38} />
             </div>
 
-            <h2 className="text-3xl font-bold">
-              No trips found
-            </h2>
+            <h2 className="text-3xl font-bold">No trips found</h2>
 
             <p className="mx-auto mt-3 max-w-md text-lg text-[#172B3A]/60">
-              Try another search or explore a new destination
-              for your next adventure.
+              Try another search or explore a new destination for your next
+              adventure.
             </p>
 
             <Link
@@ -211,7 +257,6 @@ function MyTrips() {
             </Link>
           </motion.div>
         )}
-
       </div>
     </main>
   );

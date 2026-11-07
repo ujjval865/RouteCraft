@@ -10,6 +10,8 @@ import {
 } from "lucide-react";
 
 import destinations from "../data/destinations";
+import WeatherCard from "../components/destination/WeatherCard";
+import CountryInfo from "../components/destination/CountryInfo";
 
 function DestinationDetails() {
   const { id } = useParams();
@@ -178,7 +180,10 @@ function DestinationDetails() {
             ))}
           </div>
         </section>
-
+        {/* Live Weather */}
+        <WeatherCard destination={destination} />
+        {/* Country Information */}
+        <CountryInfo country={destination.country} />
         {/* CTA */}
         <section className="mt-24 overflow-hidden rounded-[2.5rem] bg-[#172B3A] p-8 md:p-14">
           <div className="flex flex-col justify-between gap-8 md:flex-row md:items-center">
@@ -196,7 +201,10 @@ function DestinationDetails() {
               </p>
             </div>
 
-            <Link to="/plan-trip" className="inline-flex items-center gap-3  rounded-full bg-[#238A83] px-6 py-4 font-semibold text-white transition hover:bg-[#1B6D67] " >
+            <Link
+              to="/plan-trip"
+              className="inline-flex items-center gap-3  rounded-full bg-[#238A83] px-6 py-4 font-semibold text-white transition hover:bg-[#1B6D67] "
+            >
               Plan Your Trip
               <ArrowUpRight size={20} />
             </Link>

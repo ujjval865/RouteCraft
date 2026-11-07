@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { motion } from "motion/react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import { saveTrip } from "../services/tripStorage";
 import {
   MapPin,
   CalendarDays,
@@ -37,27 +38,42 @@ function TripPlanner() {
 
   const [tripData, setTripData] = useState(null);
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
+  const navigate = useNavigate();
 
-    if (!destination || !startDate || !endDate) return;
+ const handleSubmit = (e) => {
+  e.preventDefault();
 
-    if (endDate <= startDate) {
-      alert("End date must be after start date.");
-      return;
-    }
+  if (!destination || !startDate || !endDate) return;
 
-    const newTrip = {
-      destination,
-      startDate,
-      endDate,
-      travelers,
-      budget,
-      travelStyle,
-    };
+  if (endDate <= startDate) {
+    alert("End date must be after start date.");
+    return;
+  }
 
-    setTripData(newTrip);
+  const newTrip = {
+    destination,
+    startDate,
+    endDate,
+    travelers,
+    budget,
+    travelStyle,
   };
+
+  try {
+    const updatedTrips = saveTrip(newTrip);
+
+    console.log("Saved Trips:", updatedTrips);
+    console.log(
+      "LocalStorage:",
+      localStorage.getItem("routecraft_trips")
+    );
+
+    navigate("/my-trips");
+  } catch (error) {
+    console.error("Unable to save trip:", error);
+    alert("Could not save your trip. Please try again.");
+  }
+};
 
   return (
     <main className="min-h-screen bg-[#F7F5EF] px-5 pb-24 pt-32 md:px-10 lg:px-16">
@@ -120,12 +136,12 @@ function TripPlanner() {
                   setDestination(e.target.value);
                   setSubmitted(false);
                 }}
-                className="w-full rounded-2xl border border-[#172B3A]/10 bg-white/80 px-5 py-4 text-lg outline-none transition focus:border-[#238A83]"
+                className="..."
               >
                 <option value="">Choose a destination</option>
 
                 {destinations.map((item) => (
-                  <option key={item.id} value={item.name}>
+                  <option key={item.id} value={item.id}>
                     {item.name}, {item.country}
                   </option>
                 ))}
