@@ -12,6 +12,7 @@ import {
 import destinations from "../data/destinations";
 import WeatherCard from "../components/destination/WeatherCard";
 import CountryInfo from "../components/destination/CountryInfo";
+import NearbyAttractions from "../components/destination/NearbyAttractions";
 
 function DestinationDetails() {
   const { id } = useParams();
@@ -184,6 +185,8 @@ function DestinationDetails() {
         <WeatherCard destination={destination} />
         {/* Country Information */}
         <CountryInfo country={destination.country} />
+        {/* Country Attractions */}
+        <NearbyAttractions destination={destination} />
         {/* CTA */}
         <section className="mt-24 overflow-hidden rounded-[2.5rem] bg-[#172B3A] p-8 md:p-14">
           <div className="flex flex-col justify-between gap-8 md:flex-row md:items-center">
