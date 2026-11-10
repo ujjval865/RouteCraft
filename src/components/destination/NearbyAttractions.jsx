@@ -1,6 +1,6 @@
-
-import { useEffect, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { motion } from "motion/react";
+
 import {
   MapPin,
   Compass,
@@ -15,72 +15,68 @@ import {
 } from "react-leaflet";
 
 function NearbyAttractions({ destination }) {
-  const [attractions, setAttractions] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(false);
+  const { latitude, longitude } = destination;
 
-  useEffect(() => {
-    const fetchAttractions = async () => {
-      try {
-        setLoading(true);
-        setError(false);
-        setAttractions([]);
+  const isValidCoordinates =
+    Number.isFinite(latitude) && Number.isFinite(longitude);
 
-        const { latitude, longitude } = destination;
+  const {
+    data: attractions = [],
+    isPending,
+    isError,
+  } = useQuery({
+    queryKey: ["nearby-attractions", latitude, longitude],
 
-        const query = `
-          [out:json][timeout:25];
-          nwr["tourism"~"attraction|museum|viewpoint|zoo|theme_park"]["name"]
-          (around:10000,${latitude},${longitude});
-          out center;
-        `;
+    queryFn: async () => {
+      const query = `
+        [out:json][timeout:25];
+        nwr["tourism"~"attraction|museum|viewpoint|zoo|theme_park"]["name"]
+        (around:10000,${latitude},${longitude});
+        out center;
+      `;
 
-        const response = await fetch(
-          "https://overpass-api.de/api/interpreter",
-          {
-            method: "POST",
-            body: new URLSearchParams({ data: query }),
-          },
+      const response = await fetch(
+        "https://overpass-api.de/api/interpreter",
+        {
+          method: "POST",
+          body: new URLSearchParams({ data: query }),
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error(`API failed: ${response.status}`);
+      }
+
+      const data = await response.json();
+
+      const places = (data.elements ?? [])
+        .filter((place) => place.tags?.name)
+        .slice(0, 8)
+        .map((place) => ({
+          id: `${place.type}-${place.id}`,
+          name: place.tags.name,
+          category: place.tags.tourism?.replaceAll("_", " "),
+          latitude: place.lat ?? place.center?.lat,
+          longitude: place.lon ?? place.center?.lon,
+        }))
+        .filter(
+          (place) =>
+            Number.isFinite(place.latitude) &&
+            Number.isFinite(place.longitude)
         );
 
-        if (!response.ok) {
-          throw new Error(`API failed: ${response.status}`);
-        }
+      return places;
+    },
 
-        const data = await response.json();
+    enabled: isValidCoordinates,
+    staleTime: 30 * 60 * 1000,
+    gcTime: 24 * 60 * 60 * 1000,
+    retry: 1,
+    refetchOnWindowFocus: false,
+  });
 
-        const places = data.elements
-          .filter((place) => place.tags?.name)
-          .slice(0, 8)
-          .map((place) => ({
-            id: `${place.type}-${place.id}`,
-            name: place.tags.name,
-            category: place.tags.tourism?.replaceAll("_", " "),
-            latitude: place.lat ?? place.center?.lat,
-            longitude: place.lon ?? place.center?.lon,
-          }))
-          .filter(
-            (place) =>
-              Number.isFinite(place.latitude) &&
-              Number.isFinite(place.longitude),
-          );
-
-        setAttractions(places);
-      } catch (error) {
-        console.error("Attractions API Error:", error);
-        setError(true);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    if (destination.latitude && destination.longitude) {
-      fetchAttractions();
-    } else {
-      setError(true);
-      setLoading(false);
-    }
-  }, [destination.latitude, destination.longitude]);
+  const loading = isValidCoordinates && isPending;
+  const error = !isValidCoordinates || isError;
 
   return (
     <section className="mt-24">
@@ -114,58 +110,61 @@ function NearbyAttractions({ destination }) {
         </div>
 
         <div className="h-[400px] overflow-hidden rounded-2xl md:h-[500px]">
-          <MapContainer
-            key={`${destination.latitude}-${destination.longitude}`}
-            center={[destination.latitude, destination.longitude]}
-            zoom={10}
-            scrollWheelZoom={false}
-            className="h-full w-full"
-          >
-            <TileLayer
-              attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-              url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-            />
-
-            {/* Destination Marker */}
-            <CircleMarker
-              center={[
-                destination.latitude,
-                destination.longitude,
-              ]}
-              radius={11}
-              pathOptions={{
-                color: "#172B3A",
-                fillColor: "#172B3A",
-                fillOpacity: 1,
-              }}
+          {isValidCoordinates ? (
+            <MapContainer
+              key={`${latitude}-${longitude}`}
+              center={[latitude, longitude]}
+              zoom={10}
+              scrollWheelZoom={false}
+              className="h-full w-full"
             >
-              <Popup>
-                <strong>{destination.name}</strong>
-                <br />
-                Your destination
-              </Popup>
-            </CircleMarker>
+              <TileLayer
+                attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+                url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+              />
 
-            {/* Nearby Attractions Markers */}
-            {attractions.map((place) => (
+              {/* Destination Marker */}
               <CircleMarker
-                key={place.id}
-                center={[place.latitude, place.longitude]}
-                radius={8}
+                center={[latitude, longitude]}
+                radius={11}
                 pathOptions={{
-                  color: "#238A83",
-                  fillColor: "#238A83",
-                  fillOpacity: 0.9,
+                  color: "#172B3A",
+                  fillColor: "#172B3A",
+                  fillOpacity: 1,
                 }}
               >
                 <Popup>
-                  <strong>{place.name}</strong>
+                  <strong>{destination.name}</strong>
                   <br />
-                  {place.category || "Tourist place"}
+                  Your destination
                 </Popup>
               </CircleMarker>
-            ))}
-          </MapContainer>
+
+              {/* Nearby Attractions Markers */}
+              {attractions.map((place) => (
+                <CircleMarker
+                  key={place.id}
+                  center={[place.latitude, place.longitude]}
+                  radius={8}
+                  pathOptions={{
+                    color: "#238A83",
+                    fillColor: "#238A83",
+                    fillOpacity: 0.9,
+                  }}
+                >
+                  <Popup>
+                    <strong>{place.name}</strong>
+                    <br />
+                    {place.category || "Tourist place"}
+                  </Popup>
+                </CircleMarker>
+              ))}
+            </MapContainer>
+          ) : (
+            <div className="flex h-full items-center justify-center bg-[#F7F5EF] text-[#172B3A]/60">
+              Map coordinates are unavailable.
+            </div>
+          )}
         </div>
 
         <div className="mt-5 flex flex-wrap gap-6 text-sm text-[#172B3A]/70">
