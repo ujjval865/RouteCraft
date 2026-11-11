@@ -45,17 +45,23 @@ function Login() {
       setLoading(true);
 
       const { data, error } = await supabase.auth.signInWithPassword({
-        email: formData.email,
+        email: formData.email.trim().toLowerCase(),
         password: formData.password,
       });
 
       if (error) throw error;
 
+      if (!data.session) {
+        throw new Error(
+          "Please verify your email address first, then sign in."
+        );
+      }
+
       console.log("Login successful:", data);
 
       setSuccess("Login successful! Welcome to RouteCraft.");
 
-      navigate("/");
+      navigate("/", { replace: true });
     } catch (error) {
       setError(error.message);
     } finally {
@@ -65,13 +71,11 @@ function Login() {
 
   return (
     <main className="relative flex min-h-screen items-center justify-center overflow-hidden bg-[#F7F5EF] px-5 py-28 text-[#172B3A] sm:px-8">
-      {/* Background Decorations */}
       <div className="pointer-events-none absolute -left-32 top-20 h-80 w-80 rounded-full bg-[#A8E3D9]/30 blur-[100px]" />
 
       <div className="pointer-events-none absolute -right-32 bottom-10 h-96 w-96 rounded-full bg-[#238A83]/15 blur-[110px]" />
 
       <div className="relative z-10 mx-auto grid w-full max-w-6xl overflow-hidden rounded-[2.5rem] border border-white/80 bg-white/45 shadow-[0_25px_90px_rgba(23,43,58,0.12)] backdrop-blur-2xl lg:grid-cols-2">
-        {/* Left Side - Travel Image */}
         <motion.div
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
@@ -116,14 +120,12 @@ function Login() {
           </div>
         </motion.div>
 
-        {/* Right Side - Login Form */}
         <motion.div
           initial={{ opacity: 0, x: 35 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ duration: 0.7, delay: 0.15 }}
           className="flex flex-col justify-center p-7 sm:p-12 lg:p-14"
         >
-          {/* Mobile Brand */}
           <Link to="/" className="mb-12 flex items-center gap-3 lg:hidden">
             <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[#172B3A] text-white">
               <Plane size={24} />
@@ -150,7 +152,6 @@ function Login() {
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-6">
-            {/* Email */}
             <div>
               <label
                 htmlFor="email"
@@ -176,7 +177,6 @@ function Login() {
               </div>
             </div>
 
-            {/* Password */}
             <div>
               <label
                 htmlFor="password"
@@ -211,7 +211,6 @@ function Login() {
               </div>
             </div>
 
-            {/* Forgot Password */}
             <div className="flex justify-end">
               <button
                 type="button"
@@ -221,7 +220,6 @@ function Login() {
               </button>
             </div>
 
-            {/* Submit */}
             <button
               type="submit"
               disabled={loading}
@@ -236,6 +234,7 @@ function Login() {
                 />
               )}
             </button>
+
             {error && (
               <p className="rounded-xl bg-red-100 p-3 text-sm text-red-600">
                 {error}
@@ -249,7 +248,6 @@ function Login() {
             )}
           </form>
 
-          {/* Signup Link */}
           <p className="mt-9 text-center text-base text-[#172B3A]/60">
             Don't have an account?{" "}
             <Link
